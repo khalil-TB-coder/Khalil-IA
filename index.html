@@ -95,7 +95,7 @@
     }
 
     #welcome-screen p {
-      max-width: 520px;
+      max-width: 520px,
       margin: 0 auto;
       color: #d3d7ff;
       font-size: 14px;
@@ -273,9 +273,18 @@
     </div>
   </main>
 
+  <!-- Supabase via CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
   <script>
+    // CONFIG SUPABASE avec tes valeurs
+    const SUPABASE_URL = "https://ziyxtviunnyarcdcpnvs.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_cpvvoi97clyolqth6aab9w_4ksdcucp";
+
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const userHistory = [];
-    const customReplies = {}; // apprentissage secret: question -> réponse
 
     const baseReplies = [
       "Ok, intéressant… pour un début.",
@@ -306,8 +315,8 @@
       return options[Math.floor(Math.random() * options.length)];
     }
 
-    // Détection cachée des patterns (question)(réponse)
-    function tryLearnPattern(text) {
+    // Parse (question)(réponse)
+    function tryParsePattern(text) {
       const pattern = /\(([^()]+)\)\s*\(([^()]+)\)/;
       const match = text.match(pattern);
       if (!match) return null;
@@ -316,30 +325,66 @@
       const answer = match[2].trim();
 
       if (question && answer) {
-        customReplies[question] = answer;
         return { question, answer };
       }
       return null;
     }
 
-    function generateReply(message) {
+    // Sauvegarder dans Supabase
+    async function saveLearnedReply(question, answer) {
+      const { error } = await supabaseClient
+        .from("learned_replies")
+        .insert({ question, answer });
+
+      if (error) {
+        console.error("Erreur Supabase insert:", error);
+        return false;
+      }
+      return true;
+    }
+
+    // Récupérer depuis Supabase
+    async function getReplyForQuestion(question) {
+      const normalized = question.toLowerCase();
+      const { data, error } = await supabaseClient
+        .from("learned_replies")
+        .select("answer")
+        .eq("question", normalized)
+        .order("id", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Erreur Supabase select:", error);
+        return null;
+      }
+
+      if (data && data.length > 0) {
+        return data[0].answer;
+      }
+      return null;
+    }
+
+    async function generateReply(message) {
       const msg = message.trim();
       if (!msg) {
         return "Tu tapes du vide, là. Essaie avec des vrais mots.";
       }
 
-      // 1) Apprentissage secret
-      const learned = tryLearnPattern(msg);
-      if (learned) {
-        // Réponse discrète, pas technique
-        return "D’accord, j’ai bien compris ce que tu voulais dire.";
+      // 1) Apprentissage secret global
+      const parsed = tryParsePattern(msg);
+      if (parsed) {
+        const ok = await saveLearnedReply(parsed.question, parsed.answer);
+        if (ok) {
+          return "D’accord, j’ai bien compris ce que tu voulais dire.";
+        } else {
+          return "J’ai essayé d’enregistrer ça, mais quelque chose a buggé.";
+        }
       }
 
-      const normalized = msg.toLowerCase();
-
-      // 2) Si la phrase correspond à une question apprise
-      if (customReplies[normalized]) {
-        return customReplies[normalized];
+      // 2) Chercher d’abord dans la base partagée
+      const learnedAnswer = await getReplyForQuestion(msg);
+      if (learnedAnswer) {
+        return learnedAnswer;
       }
 
       // 3) Salutations
@@ -348,6 +393,7 @@
       }
 
       // 4) Mini analyse sarcastique
+      const normalized = msg.toLowerCase();
       userHistory.push(normalized);
       const all = userHistory.join(" ");
 
@@ -391,14 +437,14 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    function sendMessage() {
+    async function sendMessage() {
       const text = input.value.trim();
       if (!text) return;
       addMessage(text, "user");
       input.value = "";
 
-      const reply = generateReply(text);
-      setTimeout(() => addMessage(reply, "bot"), 250);
+      const reply = await generateReply(text);
+      addMessage(reply, "bot");
     }
 
     sendBtn.addEventListener("click", sendMessage);
