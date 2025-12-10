@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Khalil IA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: radial-gradient(circle at top, #3a68ff 0, transparent 45%),
+                  radial-gradient(circle at bottom left, #ff3aa3 0, transparent 50%),
+                  radial-gradient(circle at bottom right, #3affd3 0, transparent 50%),
+                  #050716;
+      color: #f5f5f5;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 10px 14px;
+      background: rgba(10, 12, 40, 0.95);
+      border-bottom: 1px solid rgba(120, 140, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .logo-icon {
+      font-size: 22px;
+    }
+
+    .logo-text {
+      font-family: "Trebuchet MS", cursive;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #4d7cff;
+      font-size: 18px;
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 11px;
+      color: #b7c0ff;
+    }
+
+    .header-right small {
+      display: block;
+      color: #a5b0ff;
+      font-size: 10px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    #welcome-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      gap: 14px;
+    }
+
+    #welcome-screen h2 {
+      font-size: 24px;
+      margin: 0;
+    }
+
+    #welcome-screen p {
+      max-width: 520px;
+      margin: 0 auto;
+      color: #d3d7ff;
+      font-size: 14px;
+    }
+
+    #start-btn {
+      margin-top: 8px;
+      padding: 10px 26px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #4d5eff, #ff4dad);
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(100, 120, 255, 0.7);
+    }
+
+    #start-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 25px rgba(100, 120, 255, 0.9);
+    }
+
+    #chat-screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(9, 12, 40, 0.9);
+      border: 1px solid #222a4a;
+      overflow-y: auto;
+    }
+
+    .message-row {
+      width: 100%;
+      display: flex;
+      margin-bottom: 6px;
+    }
+
+    .message-row.user-row {
+      justify-content: flex-end;
+    }
+
+    .message-row.bot-row {
+      justify-content: flex-start;
+    }
+
+    .message {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 10px;
+      line-height: 1.4;
+      max-width: 75%;
+      word-wrap: break-word;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    .user {
+      background: #3056ff;
+      border-bottom-right-radius: 2px;
+      text-align: left;
+    }
+
+    .bot {
+      background: #1d2345;
+      border-bottom-left-radius: 2px;
+      text-align: left;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #8b92c7;
+      padding: 0 2px 2px 2px;
+      flex-shrink: 0;
+    }
+
+    #input-area {
+      display: flex;
+      gap: 8px;
+      padding-top: 4px;
+      padding-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid #3b4575;
+      background: #050716;
+      color: #f5f5f5;
+      font-size: 14px;
+    }
+
+    #user-input::placeholder {
+      color: #7077b0;
+    }
+
+    #send-btn {
+      width: 52px;
+      height: 40px;
+      border-radius: 999px;
+      border: none;
+      background: #ff4dad;
+      color: #fff;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(255, 77, 173, 0.7);
+      flex-shrink: 0;
+    }
+
+    #send-btn:hover {
+      background: #ff6ec5;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 600px) {
+      .message {
+        max-width: 85%;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🚀</span>
+      <span class="logo-text">KHALIL IA</span>
+    </div>
+    <div class="header-right">
+      <div>Khalil IA – elle discute avec toi.</div>
+      <small>Un peu sarcastique, mais elle écoute.</small>
+    </div>
+  </header>
+
+  <main>
+    <!-- Écran d'accueil -->
+    <div id="welcome-screen">
+      <h2>Bienvenue chez Khalil IA</h2>
+      <p>
+        L’intelligence qui va vous aider à écouter et à vous ouvrir.<br />
+        Cliquez sur « Parler » pour commencer une discussion.
+      </p>
+      <button id="start-btn">Parler</button>
+    </div>
+
+    <!-- Écran de chat -->
+    <div id="chat-screen">
+      <div id="messages"></div>
+      <div class="hint">
+        Discute librement. Elle réagit à ce que tu dis… à sa manière.
+      </div>
+      <div id="input-area">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Écris pour parler avec Khalil IA..."
+        />
+        <button id="send-btn" title="Envoyer">
+          🚀
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Supabase via CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <script>
+    // CONFIG SUPABASE avec tes valeurs
+    const SUPABASE_URL = "https://ziyxtviunnyarcdcpnvs.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppeXh0dml1bm55YXJjZGNwbnZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMDE3NDIsImV4cCI6MjA4MDg3Nzc0Mn0.tGmd73WkvlSAiis200xJh0JTHK1V0ICNuey8HUMS9eU";
+
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const userHistory = [];
+
+    const baseReplies = [
+      "Ok, intéressant… pour un début.",
+      "Tu dis ça sérieusement ou c’est un test ?",
+      "Hm. Je note. Ton cerveau était en mode économie d’énergie, non ?",
+      "C’est une façon de voir les choses. Pas la meilleure, mais une façon.",
+      "Tu as d’autres idées comme ça ou c’était la version light ?",
+      "Pas mal. Je m’attendais à pire, donc c’est presque un compliment.",
+      "On continue, je m’habitue à ton style… doucement.",
+      "Je vois. Je ne valide pas, mais je vois."
+    ];
+
+    const greetings = ["salut", "bonjour", "bonsoir", "hey", "yo", "coucou", "hello", "hi"];
+
+    function isGreeting(text) {
+      const lower = text.toLowerCase();
+      return greetings.some(g => lower.includes(g));
+    }
+
+    function greetingReply() {
+      const options = [
+        "Salut. On dirait que tu sais au moins dire bonjour, c’est déjà ça.",
+        "Bonjour. Tu as aussi des phrases complètes en stock ou on reste sur les salutations ?",
+        "Hey. Niveau originalité, on repassera, mais ça marche.",
+        "Yo. Ok, on est dans l’ambiance. Tu as autre chose que ‘yo’ dans ta vie ?",
+        "Bonsoir. J’espère que tes idées sont plus réveillées que ton salut."
+      ];
+      return options[Math.floor(Math.random() * options.length)];
+    }
+
+    // Parse (question)(réponse)
+    function tryParsePattern(text) {
+      const pattern = /\(([^()]+)\)\s*\(([^()]+)\)/;
+      const match = text.match(pattern);
+      if (!match) return null;
+
+      const question = match[1].trim().toLowerCase();
+      const answer = match[2].trim();
+
+      if (question && answer) {
+        return { question, answer };
+      }
+      return null;
+    }
+
+    // Sauvegarder dans Supabase
+    async function saveLearnedReply(question, answer) {
+      const { error } = await supabaseClient
+        .from("learned_replies")
+        .insert({ question, answer });
+
+      if (error) {
+        console.error("Erreur Supabase insert:", error);
+        return false;
+      }
+      return true;
+    }
+
+    // Récupérer depuis Supabase
+    async function getReplyForQuestion(question) {
+      const normalized = question.toLowerCase();
+      const { data, error } = await supabaseClient
+        .from("learned_replies")
+        .select("answer")
+        .eq("question", normalized)
+        .order("id", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Erreur Supabase select:", error);
+        return null;
+      }
+
+      if (data && data.length > 0) {
+        return data[0].answer;
+      }
+      return null;
+    }
+
+    async function generateReply(message) {
+      const msg = message.trim();
+      if (!msg) {
+        return "Tu tapes du vide, là. Essaie avec des vrais mots.";
+      }
+
+      // 1) Apprentissage secret global
+      const parsed = tryParsePattern(msg);
+      if (parsed) {
+        const ok = await saveLearnedReply(parsed.question, parsed.answer);
+        if (ok) {
+          return "D’accord, j’ai bien compris ce que tu voulais dire.";
+        } else {
+          return "J’ai essayé d’enregistrer ça, mais quelque chose a buggé.";
+        }
+      }
+
+      // 2) Chercher d’abord dans la base partagée
+      const learnedAnswer = await getReplyForQuestion(msg);
+      if (learnedAnswer) {
+        return learnedAnswer;
+      }
+
+      // 3) Salutations
+      if (isGreeting(msg)) {
+        return greetingReply();
+      }
+
+      // 4) Mini analyse sarcastique
+      const normalized = msg.toLowerCase();
+      userHistory.push(normalized);
+      const all = userHistory.join(" ");
+
+      if (all.includes("école")) {
+        return "L’école, encore. On dirait une saga que tu n’as jamais vraiment quittée.";
+      }
+      if (all.includes("football") || all.includes("foot")) {
+        return "Le foot, toujours. Tu joues vraiment ou tu cries juste devant l’écran ?";
+      }
+      if (all.includes("jeu") || all.includes("gaming")) {
+        return "Les jeux, c’est ta passion ou juste une excuse pour éviter le reste ?";
+      }
+
+      // 5) Questions génériques
+      if (msg.endsWith("?")) {
+        return "Bonne question. Je te laisse réfléchir aussi, hein.";
+      }
+
+      // 6) Réponse par défaut sarcastique
+      const idx = Math.floor(Math.random() * baseReplies.length);
+      return baseReplies[idx];
+    }
+
+    const messagesDiv = document.getElementById("messages");
+    const input = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const welcomeScreen = document.getElementById("welcome-screen");
+    const chatScreen = document.getElementById("chat-screen");
+    const startBtn = document.getElementById("start-btn");
+
+    function addMessage(text, type) {
+      const row = document.createElement("div");
+      row.className = "message-row " + (type === "user" ? "user-row" : "bot-row");
+
+      const bubble = document.createElement("div");
+      bubble.className = "message " + type;
+      bubble.textContent = text;
+
+      row.appendChild(bubble);
+      messagesDiv.appendChild(row);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, "user");
+      input.value = "";
+
+      const reply = await generateReply(text);
+      addMessage(reply, "bot");
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    startBtn.addEventListener("click", () => {
+      welcomeScreen.style.display = "none";
+      chatScreen.style.display = "flex";
+      addMessage(
+        "C’est moi, Khalil IA. Parle, teste-moi, et on verra jusqu’où va ton imagination.",
+        "bot"
+      );
+    });
+  </script>
+</body>
+</html>
